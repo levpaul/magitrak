@@ -10,7 +10,7 @@ var (
 )
 
 type Match struct {
-	ObjectId         string
+	Id               string
 	Date             time.Time
 	PlayerDeck       string
 	OpponentDeck     string
