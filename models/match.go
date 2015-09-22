@@ -36,10 +36,6 @@ func GetOne(matchId string) (*Match, error) {
 	return match, nil
 }
 
-func GetAll() map[string]*Match {
-	return Matches
-}
-
 func Delete(objectId string) {
 	delete(Matches, objectId)
 }

@@ -46,17 +46,6 @@ func (m *MatchController) Get() {
 	m.ServeJson()
 }
 
-// @Title GetAll
-// @Description get all matches
-// @Success 200 {match} models.Match
-// @Failure 403 :matchId is empty
-// @router / [get]
-func (m *MatchController) GetAll() {
-	obs := models.GetAll()
-	m.Data["json"] = obs
-	m.ServeJson()
-}
-
 // @Title delete
 // @Description delete the object
 // @Param	objectId		path 	string	true		"The objectId you want to delete"
