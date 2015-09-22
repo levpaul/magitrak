@@ -9,8 +9,5 @@ import (
 )
 
 func main() {
-	if beego.RunMode == "dev" {
-		beego.DirectoryIndex = true
-	}
 	beego.Run()
 }
