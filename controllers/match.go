@@ -13,13 +13,8 @@ type MatchController struct {
 	beego.Controller
 }
 
-// @Title create
-// @Description create match
-// @Param	body		body 	models.Match	true		"The match content"
-// @Success 200 {string} models.Match.Id
-// @Failure 403 body is empty
 // @router / [post]
-func (m *MatchController) Post() {
+func (m *MatchController) Create() {
 	var match models.Match
 	json.Unmarshal(m.Ctx.Input.RequestBody, &match)
 	// TODO: Generate a Match ID (uuid)
@@ -27,13 +22,8 @@ func (m *MatchController) Post() {
 	m.ServeJson()
 }
 
-// @Title Get
-// @Description find match by matchid
-// @Param	matchId		path 	string	true		"the matchid you want to get"
-// @Success 200 {match} models.Match
-// @Failure 403 :matchId is empty
 // @router /:matchId [get]
-func (m *MatchController) Get() {
+func (m *MatchController) GetSingle() {
 	matchId := m.Ctx.Input.Params[":matchId"]
 	if matchId != "" {
 		match, err := models.GetOne(matchId)
@@ -46,15 +36,16 @@ func (m *MatchController) Get() {
 	m.ServeJson()
 }
 
-// @Title delete
-// @Description delete the object
-// @Param	objectId		path 	string	true		"The objectId you want to delete"
-// @Success 200 {string} delete success!
-// @Failure 403 objectId is empty
-// @router /:objectId [delete]
+// @router /:matchId [delete]
 func (m *MatchController) Delete() {
 	matchId := m.Ctx.Input.Params[":matchId"]
 	models.Delete(matchId)
 	m.Data["json"] = "delete success!"
 	m.ServeJson()
+}
+
+// @router / [get]
+func (m *MatchController) GetAll() {
+	// validate session
+	// return all matches for user
 }
