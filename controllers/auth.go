@@ -1,6 +1,11 @@
 package controllers
 
-import "github.com/astaxie/beego"
+import (
+	"encoding/json"
+
+	"github.com/astaxie/beego"
+	"github.com/levilovelock/magitrak/models"
+)
 
 // Operations about auth
 type AuthController struct {
@@ -22,6 +27,25 @@ func (m *AuthController) Logout() {
 // @router /register [post]
 func (m *AuthController) Register() {
 	//	validate params
+	type registration struct {
+		Email    string
+		Password string
+	}
+	form := registration{}
+	body := m.Ctx.Input.RequestBody
+	jsonParseErr := json.Unmarshal(body, &form)
+	if jsonParseErr != nil {
+		beego.Debug("Failed to parse registration JSON load")
+		m.Abort("400")
+	}
+
 	//	create user
-	//	create session
+	newUser, addUserErr := models.AddNewUser(form.Email, form.Password)
+	if addUserErr != nil {
+		beego.Debug("Error occured during registration of new user:", addUserErr.Error())
+		m.Abort("400")
+	}
+
+	m.Data["json"] = newUser
+	m.ServeJson()
 }
