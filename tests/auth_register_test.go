@@ -47,3 +47,14 @@ func TestInvalidJSONReturns400(t *testing.T) {
 
 	assert.Equal(t, 400, w.Code)
 }
+
+func TestTooSmallPasswordReturns400(t *testing.T) {
+	body := []byte(`{"email":"asfd@gmail.com", "password":"small"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	beego.Trace("testing", "TestGet", "Code[%d]\n%s", w.Code, w.Body.String())
+
+	assert.Equal(t, 400, w.Code)
+}
