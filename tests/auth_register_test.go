@@ -10,6 +10,8 @@ import (
 	_ "github.com/astaxie/beego/session/mysql"
 	_ "github.com/levilovelock/magitrak/routers"
 
+	"bytes"
+
 	"github.com/astaxie/beego"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +22,6 @@ func init() {
 	beego.TestBeegoInit(apppath)
 }
 
-// TestInvalidJSONReturns400
 // TestTooSmallPasswordReturns400
 // TestTooLongPasswordReturns400
 // TestInvalidEmailPasswordReturns400
@@ -34,4 +35,15 @@ func TestGETReturns404(t *testing.T) {
 	beego.Trace("testing", "TestGet", "Code[%d]\n%s", w.Code, w.Body.String())
 
 	assert.Equal(t, 404, w.Code)
+}
+
+func TestInvalidJSONReturns400(t *testing.T) {
+	body := []byte(`"{incomplete and not "valid JSON`)
+	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	beego.Trace("testing", "TestGet", "Code[%d]\n%s", w.Code, w.Body.String())
+
+	assert.Equal(t, 400, w.Code)
 }
