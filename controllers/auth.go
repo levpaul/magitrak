@@ -14,38 +14,47 @@ type AuthController struct {
 
 // @router /login [post]
 func (a *AuthController) Login() {
+	// parse json data
+	user := models.User{}
+	body := a.Ctx.Input.RequestBody
+	jsonParseError := json.Unmarshal(body, &user)
+	if jsonParseError != nil {
+		beego.Debug("Failed to parse registration JSON load")
+		a.Abort("400")
+	}
+
 	//	Check login details
 	//	if good, create session data
 }
 
 // @router /logout [get]
-func (m *AuthController) Logout() {
+func (a *AuthController) Logout() {
 	//	GET auth/logout
 	//	remove session data
 }
 
 // @router /register [post]
-func (m *AuthController) Register() {
+func (a *AuthController) Register() {
 	//	validate params
 	type registration struct {
 		Email    string
 		Password string
 	}
 	form := registration{}
-	body := m.Ctx.Input.RequestBody
+	body := a.Ctx.Input.RequestBody
 	jsonParseErr := json.Unmarshal(body, &form)
 	if jsonParseErr != nil {
 		beego.Debug("Failed to parse registration JSON load")
-		m.Abort("400")
+		a.Abort("400")
 	}
 
 	//	create user
 	newUser, addUserErr := models.AddNewUser(form.Email, form.Password)
 	if addUserErr != nil {
 		beego.Debug("Error occured during registration of new user:", addUserErr.Error())
-		m.Abort("400")
+		a.Abort("400")
 	}
 
-	m.Data["json"] = newUser
-	m.ServeJson()
+	a.Data["json"] = newUser
+	a.ServeJson()
 }

@@ -24,7 +24,6 @@ func init() {
 
 	dbAddress := beego.AppConfig.String("modelORMaddress")
 	dbType := beego.AppConfig.String("modelORMdb")
-	beego.Info("dbaddy:", dbAddress)
 
 	dbErr := orm.RegisterDataBase("default", dbType, dbAddress, 30)
 	if dbErr != nil {
@@ -37,7 +36,7 @@ func init() {
 	}
 }
 
-func TestGETReturns404(t *testing.T) {
+func TestAuthRegisterGETReturns404(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/v1/auth/register", nil)
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
@@ -45,7 +44,7 @@ func TestGETReturns404(t *testing.T) {
 	assert.Equal(t, 404, w.Code)
 }
 
-func TestInvalidJSONReturns400(t *testing.T) {
+func TestAuthRegisterInvalidJSONReturns400(t *testing.T) {
 	body := []byte(`"{incomplete and not "valid JSON`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
@@ -54,7 +53,7 @@ func TestInvalidJSONReturns400(t *testing.T) {
 	assert.Equal(t, 400, w.Code)
 }
 
-func TestTooSmallPasswordReturns400(t *testing.T) {
+func TesAuthRegistertTooSmallPasswordReturns400(t *testing.T) {
 	body := []byte(`{"email":"asfd@gmail.com", "password":"small"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
@@ -63,7 +62,7 @@ func TestTooSmallPasswordReturns400(t *testing.T) {
 	assert.Equal(t, 400, w.Code)
 }
 
-func TestTooLongPasswordReturns400(t *testing.T) {
+func TestAuthRegisterTooLongPasswordReturns400(t *testing.T) {
 	body := []byte(`{"email":"asfd@gmail.com", "password":"reallyreallyreallyreallyreally
 	reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongpassword"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
@@ -73,7 +72,7 @@ func TestTooLongPasswordReturns400(t *testing.T) {
 	assert.Equal(t, 400, w.Code)
 }
 
-func TestInvalidEmailPasswordReturns400(t *testing.T) {
+func TestAuthRegisterInvalidEmailPasswordReturns400(t *testing.T) {
 	body := []byte(`{"email":"asfdnotemail", "password":"validpassword"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
@@ -82,7 +81,7 @@ func TestInvalidEmailPasswordReturns400(t *testing.T) {
 	assert.Equal(t, 400, w.Code)
 }
 
-func TestValidRegistrationReturns200(t *testing.T) {
+func TestAuthRegisterValidRegistrationReturns200(t *testing.T) {
 	body := []byte(`{"email":"some@email.com", "password":"validpassword"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
@@ -91,7 +90,7 @@ func TestValidRegistrationReturns200(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 }
 
-func TestRegisterSameEmailTwiceReturns400(t *testing.T) {
+func TestAuthRegisterRegisterSameEmailTwiceReturns400(t *testing.T) {
 	body := []byte(`{"email":"some@otheremail.com", "password":"validpassword"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
