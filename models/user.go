@@ -12,7 +12,7 @@ import (
 
 type User struct {
 	Id       int
-	Email    string `orm:"size(150)"`
+	Email    string `orm:"size(150);unique"`
 	Password string `orm:"size(60)" json:"-"`
 }
 

@@ -11,10 +11,11 @@ import (
 
 func main() {
 	dbAddress := beego.AppConfig.String("modelORMaddress")
+	dbType := beego.AppConfig.String("modelORMdb")
 	if dbAddress == "" {
 		beego.Error("Cannot find config line for modelORMaddress - please set it!")
 	}
-	dbErr := orm.RegisterDataBase("default", "mysql", dbAddress, 30)
+	dbErr := orm.RegisterDataBase("default", dbType, dbAddress, 30)
 	if dbErr != nil {
 		beego.Error(dbErr)
 	}
