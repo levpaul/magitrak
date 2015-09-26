@@ -13,7 +13,7 @@ import (
 type User struct {
 	Id       int
 	Email    string `orm:"size(150);unique"`
-	Password string `orm:"size(60)" json:"-"`
+	Password string `orm:"size(60)"`
 }
 
 const (
@@ -54,4 +54,26 @@ func AddNewUser(email, password string) (*User, error) {
 
 	// Everything went well
 	return &newUser, nil
+}
+
+func (u *User) Authenticate() error {
+	if u.Email == "" || u.Password == "" {
+		return errors.New("Authentication failure, either email or password was empty")
+	}
+	suppliedPassword := u.Password
+
+	o := orm.NewOrm()
+	dbFindErr := o.Read(u, "Email")
+	if dbFindErr != nil {
+
+		return errors.New("Failed to find User from DB with supplied Email")
+	}
+
+	passwordErr := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(suppliedPassword))
+	if passwordErr != nil {
+		return errors.New("Failed to authenticate User with given email")
+	}
+
+	// TODO: create session entry
+	return nil
 }

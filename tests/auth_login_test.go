@@ -48,16 +48,57 @@ func TestAuthLoginInvalidJSON400(t *testing.T) {
 }
 
 func TestAuthLoginNoPassword401(t *testing.T) {
-	body := []byte(`{"email":"asfd@gmail."small"}`)
+	body := []byte(`{"email":"someemail@gmail.com"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 400, w.Code)
+	assert.Equal(t, 401, w.Code)
 }
 
-// TestAuthLoginNoUsername401
-// TestAuthLoginNoUser401
-// TestAuthLoginInvalidPassword401
-// TestAuthLoginValid200
-// TestAuthLoginAlreadyLoggedIn200
+func TestAuthLoginNoEmail401(t *testing.T) {
+	body := []byte(`{"password":"somepass"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 401, w.Code)
+}
+
+func TestAuthLoginUnregisteredEmail401(t *testing.T) {
+	body := []byte(`{"email": "randomemailthatnotexist@email.com", "password":"somepass"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 401, w.Code)
+}
+
+func TestAuthLoginValid200(t *testing.T) {
+	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 200, w.Code)
+}
+
+func TestAuthLoginInvalidPassword401(t *testing.T) {
+	body := []byte(`{"email": "some@email.com", "password":"invalidpassword"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 401, w.Code)
+}
+
+func TestAuthLoginAlreadyLoggedIn200(t *testing.T) {
+	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	// TODO: Get Cookie from response
+
+	assert.Equal(t, 20110, w.Code)
+}

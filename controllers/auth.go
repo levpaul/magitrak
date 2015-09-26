@@ -23,7 +23,11 @@ func (a *AuthController) Login() {
 		a.Abort("400")
 	}
 
-	//	Check login details
+	authErr := user.Authenticate()
+	if authErr != nil {
+		beego.Debug("Failed to authenticate user for login")
+		a.Abort("401")
+	}
 	//	if good, create session data
 }
 
@@ -55,6 +59,9 @@ func (a *AuthController) Register() {
 		a.Abort("400")
 	}
 
-	a.Data["json"] = newUser
+	type response struct {
+		Id int
+	}
+	a.Data["json"] = response{Id: newUser.Id}
 	a.ServeJson()
 }
