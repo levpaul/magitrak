@@ -98,7 +98,15 @@ func TestAuthLoginAlreadyLoggedIn200(t *testing.T) {
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	// TODO: Get Cookie from response
+	// Add session cookie from first login to request
+	resp := http.Response{Header: w.HeaderMap}
+	cookies := resp.Cookies()
+	r.AddCookie(cookies[0])
 
-	assert.Equal(t, 20110, w.Code)
+	// Rerun request (with session cookie)
+	w = httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "Already logged in!", w.Body.String())
 }
