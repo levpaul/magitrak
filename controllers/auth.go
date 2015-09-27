@@ -16,7 +16,6 @@ type AuthController struct {
 func (a *AuthController) Login() {
 	// Check if already logged in
 	existingSession := a.GetSession(models.SESSION_NAME)
-	beego.Debug("Existing session:", existingSession)
 	if existingSession != nil && existingSession.(models.MagiSession).Authenticated {
 		beego.Debug("Tried to login when already logged in")
 		a.Ctx.ResponseWriter.Write([]byte("Already logged in!"))
@@ -43,8 +42,7 @@ func (a *AuthController) Login() {
 
 // @router /logout [get]
 func (a *AuthController) Logout() {
-	//	GET auth/logout
-	//	remove session data
+	a.DelSession(models.SESSION_NAME)
 }
 
 // @router /register [post]
