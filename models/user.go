@@ -56,24 +56,23 @@ func AddNewUser(email, password string) (*User, error) {
 	return &newUser, nil
 }
 
-func (u *User) Authenticate() error {
+// Authenticates user by Email and on success reutrns the userID, on failure returns an error
+func (u *User) Authenticate() (int, error) {
 	if u.Email == "" || u.Password == "" {
-		return errors.New("Authentication failure, either email or password was empty")
+		return 0, errors.New("Authentication failure, either email or password was empty")
 	}
 	suppliedPassword := u.Password
 
 	o := orm.NewOrm()
 	dbFindErr := o.Read(u, "Email")
 	if dbFindErr != nil {
-
-		return errors.New("Failed to find User from DB with supplied Email")
+		return 0, errors.New("Failed to find User from DB with supplied Email")
 	}
 
 	passwordErr := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(suppliedPassword))
 	if passwordErr != nil {
-		return errors.New("Failed to authenticate User with given email")
+		return 0, errors.New("Failed to authenticate User with given email")
 	}
 
-	// TODO: create session entry
-	return nil
+	return u.Id, nil
 }

@@ -14,6 +14,15 @@ type AuthController struct {
 
 // @router /login [post]
 func (a *AuthController) Login() {
+	// Check if already logged in
+	existingSession := a.GetSession(models.SESSION_NAME)
+	beego.Debug("Existing session:", existingSession)
+	if existingSession != nil && existingSession.(models.MagiSession).Authenticated {
+		beego.Debug("Tried to login when already logged in")
+		a.Ctx.ResponseWriter.Write([]byte("Already logged in!"))
+		return
+	}
+
 	// parse json data
 	user := models.User{}
 	body := a.Ctx.Input.RequestBody
@@ -23,12 +32,13 @@ func (a *AuthController) Login() {
 		a.Abort("400")
 	}
 
-	authErr := user.Authenticate()
+	userId, authErr := user.Authenticate()
 	if authErr != nil {
 		beego.Debug("Failed to authenticate user for login")
 		a.Abort("401")
 	}
-	//	if good, create session data
+
+	a.SetSession(models.SESSION_NAME, models.MagiSession{UserId: userId, Authenticated: true})
 }
 
 // @router /logout [get]
