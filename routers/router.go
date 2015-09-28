@@ -9,6 +9,7 @@ package routers
 
 import (
 	"github.com/levilovelock/magitrak/controllers"
+	"github.com/levilovelock/magitrak/models"
 
 	"github.com/astaxie/beego"
 )
@@ -27,4 +28,7 @@ func init() {
 		),
 	)
 	beego.AddNamespace(ns)
+
+	beego.InsertFilter("/v1/match", beego.BeforeExec, models.IsLoggedInFilter)
+	beego.InsertFilter("/v1/match/*", beego.BeforeExec, models.IsLoggedInFilter)
 }

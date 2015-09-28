@@ -73,3 +73,8 @@ func (a *AuthController) Register() {
 	a.Data["json"] = response{Id: newUser.Id}
 	a.ServeJson()
 }
+
+// @router /unauthorised [get]
+func (a *AuthController) Unauthorised() {
+	a.CustomAbort(401, "Unauthorised")
+}
