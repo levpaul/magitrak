@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -39,9 +40,29 @@ func TestMatchGETNoLoginReturns401(t *testing.T) {
 }
 
 func TestMatchGETWithLoginReturns200(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/v1/auth/login", nil)
+	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 404, w.Code)
+	// Get session cookie from first login
+	resp := http.Response{Header: w.HeaderMap}
+	cookies := resp.Cookies()
+
+	r, _ = http.NewRequest("GET", "/v1/match/1", nil)
+	w = httptest.NewRecorder()
+	r.AddCookie(cookies[0])
+
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 200, w.Code)
+}
+
+func TestAuthUnauthorised401(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/v1/auth/unauthorised", nil)
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 401, w.Code)
+	assert.Equal(t, "Unauthorised", w.Body.String())
 }
