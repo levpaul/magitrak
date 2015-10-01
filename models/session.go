@@ -1,7 +1,8 @@
 package models
 
 import (
-	"github.com/astaxie/beego"
+	"os"
+
 	"github.com/astaxie/beego/context"
 )
 
@@ -15,11 +16,9 @@ type MagiSession struct {
 }
 
 func IsLoggedInFilter(c *context.Context) {
-	authRequired, confErr := beego.AppConfig.Bool("SessionAuthRequired")
-	if confErr != nil {
-		c.Abort(501, "Internal Server Error")
-	}
-	if !authRequired {
+	// TODO: Fix this workaround with appconfig (mainly for testing)
+	authRequired := os.Getenv("sessionAuthRequired")
+	if authRequired == "false" {
 		return
 	}
 

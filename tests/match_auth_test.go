@@ -28,6 +28,9 @@ func init() {
 	if dbErr != nil {
 		beego.Error(dbErr)
 	}
+
+	// For testing auth
+
 }
 
 func TestMatchGETNoLoginReturns401(t *testing.T) {
