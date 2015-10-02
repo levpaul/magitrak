@@ -5,12 +5,17 @@ import (
 	"time"
 )
 
+const (
+	ELASTIC_MATCH_TYPE = "match"
+	ELASTIC_INDEX      = "magitrak"
+)
+
 var (
 	Matches map[string]*Match
 )
 
 type Match struct {
-	Id               string
+	UserId           int
 	Date             time.Time
 	PlayerDeck       string
 	OpponentDeck     string
