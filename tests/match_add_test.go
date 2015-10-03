@@ -12,10 +12,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 
-	"os"
-
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+)
+
+const (
+	SESSION_USER_ID = 1
 )
 
 func init() {
@@ -30,16 +32,48 @@ func init() {
 	if dbErr != nil {
 		beego.Error(dbErr)
 	}
-
-	os.Setenv("SessionAuthRequired", "false")
 }
 
-func TestMatchPOSTWithValidMatchReturns200(t *testing.T) {
-	body := []byte(`{"match": "somematchcom", "password":"validpassword"}`)
+func TestMatchPOSTWithInvalidMatchReturns400(t *testing.T) {
+	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(getValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 400, w.Code)
+}
+
+func TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400(t *testing.T) {
+	body := []byte(`{"userid": 4}`)
+
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(getValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, 400, w.Code)
+}
+
+func TestMatchPOSTValidUserIdAndMatchReturns200(t *testing.T) {
+	body := []byte(`{"userid": 1}`)
+
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(getValidLoggedInSessionCookie())
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
 	assert.Equal(t, 200, w.Code)
+}
+
+func getValidLoggedInSessionCookie() *http.Cookie {
+	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
+	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	resp := http.Response{Header: w.HeaderMap}
+	cookies := resp.Cookies()
+	return cookies[0]
 }

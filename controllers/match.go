@@ -18,7 +18,11 @@ type MatchController struct {
 // @router / [post]
 func (m *MatchController) Create() {
 	var match models.Match
-	json.Unmarshal(m.Ctx.Input.RequestBody, &match)
+	unmarshalErr := json.Unmarshal(m.Ctx.Input.RequestBody, &match)
+	if unmarshalErr != nil {
+		beego.Debug("Error unmarshalling request for Match POST:", unmarshalErr.Error())
+		m.Abort("400")
+	}
 
 	// Create a client
 	client, elasticClientErr := elastic.NewClient()
@@ -35,7 +39,7 @@ func (m *MatchController) Create() {
 
 	if match.UserId != magiSession.(models.MagiSession).UserId {
 		beego.Debug("Session userid does not match the userId in match data for match creation request")
-		m.Abort("401")
+		m.Abort("400")
 	}
 
 	matchData, marshalErr := json.Marshal(match)
