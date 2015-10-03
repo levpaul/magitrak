@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	_ "github.com/levilovelock/magitrak/routers"
+	"github.com/levilovelock/magitrak/tests/common"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 
@@ -42,7 +43,7 @@ func (s *MatchAddTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
 	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
-	r.AddCookie(getValidLoggedInSessionCookie())
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
@@ -53,7 +54,7 @@ func (s *MatchAddTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionRe
 	body := []byte(`{"userid": 4}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
-	r.AddCookie(getValidLoggedInSessionCookie())
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
@@ -64,20 +65,9 @@ func (s *MatchAddTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 	body := []byte(`{"userid": 1}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
-	r.AddCookie(getValidLoggedInSessionCookie())
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
 	s.Assert().Equal(200, w.Code)
-}
-
-func getValidLoggedInSessionCookie() *http.Cookie {
-	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
-	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
-
-	resp := http.Response{Header: w.HeaderMap}
-	cookies := resp.Cookies()
-	return cookies[0]
 }
