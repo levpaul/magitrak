@@ -19,7 +19,7 @@ type MatchGetTestSuite struct {
 }
 
 func TestMatchGetTestSuite(t *testing.T) {
-	suite.Run(t, new(MatchAddTestSuite))
+	suite.Run(t, new(MatchGetTestSuite))
 }
 
 func (s *MatchGetTestSuite) SetupSuite() {
