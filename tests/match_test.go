@@ -19,15 +19,15 @@ const (
 	SESSION_USER_ID = 1
 )
 
-type MatchAddTestSuite struct {
+type MatchTestSuite struct {
 	suite.Suite
 }
 
-func TestMatchAddTestSuite(t *testing.T) {
-	suite.Run(t, new(MatchAddTestSuite))
+func TestMatchTestSuite(t *testing.T) {
+	suite.Run(t, new(MatchTestSuite))
 }
 
-func (s *MatchAddTestSuite) SetupSuite() {
+func (s *MatchTestSuite) SetupSuite() {
 	beego.TestBeegoInit("../../../levilovelock/magitrak")
 
 	dbAddress := beego.AppConfig.String("modelORMPrepopulatedAdress")
@@ -39,7 +39,7 @@ func (s *MatchAddTestSuite) SetupSuite() {
 	}
 }
 
-func (s *MatchAddTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
+func (s *MatchTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
 	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -50,7 +50,7 @@ func (s *MatchAddTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-func (s *MatchAddTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400() {
+func (s *MatchTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400() {
 	body := []byte(`{"userid": 4}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -61,7 +61,7 @@ func (s *MatchAddTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionRe
 	s.Assert().Equal(400, w.Code)
 }
 
-func (s *MatchAddTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
+func (s *MatchTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 	body := []byte(`{"userid": 1}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -71,3 +71,28 @@ func (s *MatchAddTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 
 	s.Assert().Equal(200, w.Code)
 }
+
+func (s *MatchTestSuite) TestMatchGETNoLoginReturns401() {
+	r, _ := http.NewRequest("GET", "/v1/match/1", nil)
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(302, w.Code)
+	s.Assert().Equal("/v1/auth/unauthorised", w.Header().Get("Location"))
+}
+
+func (s *MatchTestSuite) TestMatchGETWithLoginReturns200() {
+	r, _ := http.NewRequest("GET", "/v1/match/1", nil)
+	w := httptest.NewRecorder()
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(200, w.Code)
+}
+
+// TestMatchPOSTNoPlayerDeckReturns400
+// TestMatchPOSTNoOpponentDeckReturns400
+// TestMatchPOSTNoDateReturns400
+// TestMatchPOSTValidSampleMatchAReturn200AndGetAReturn200
+// TestMatchPOSTValidSampleMatchBReturn200AndGetBReturn200
