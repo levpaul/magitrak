@@ -61,12 +61,3 @@ func (s *MatchGetTestSuite) TestMatchGETWithLoginReturns200() {
 
 	s.Assert().Equal(200, w.Code)
 }
-
-func (s *MatchGetTestSuite) TestAuthUnauthorised401() {
-	r, _ := http.NewRequest("GET", "/v1/auth/unauthorised", nil)
-	w := httptest.NewRecorder()
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
-
-	s.Assert().Equal(401, w.Code)
-	s.Assert().Equal("Unauthorised", w.Body.String())
-}
