@@ -76,3 +76,20 @@ func (u *User) Authenticate() (int, error) {
 
 	return u.Id, nil
 }
+
+func GetUserByEmail(email string) (*User, error) {
+	u := &User{Email: email}
+	o := orm.NewOrm()
+	dbFindErr := o.Read(u, "Email")
+	if dbFindErr != nil {
+		return nil, dbFindErr
+	}
+	return u, nil
+}
+
+func (u *User) Delete() error {
+	o := orm.NewOrm()
+	beego.Debug("ASDFASDFASDFASDFSADFSADF:", u)
+	_, err := o.Delete(u)
+	return err
+}

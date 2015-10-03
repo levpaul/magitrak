@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/astaxie/beego/orm"
@@ -13,13 +11,19 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/astaxie/beego"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func init() {
-	_, file, _, _ := runtime.Caller(1)
-	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".."+string(filepath.Separator))))
-	beego.TestBeegoInit(apppath)
+type AuthLogoutTestSuite struct {
+	suite.Suite
+}
+
+func TestAuthLogoutTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthLogoutTestSuite))
+}
+
+func (s *AuthLogoutTestSuite) SetupSuite() {
+	beego.TestBeegoInit("../../../levilovelock/magitrak")
 
 	dbAddress := beego.AppConfig.String("modelORMPrepopulatedAdress")
 	dbType := beego.AppConfig.String("modelORMdb")
@@ -30,15 +34,15 @@ func init() {
 	}
 }
 
-func TestAuthLogoutPOSTReturns404(t *testing.T) {
+func (s *AuthLogoutTestSuite) TestAuthLogoutPOSTReturns404() {
 	r, _ := http.NewRequest("POST", "/v1/auth/logout", bytes.NewBuffer([]byte("")))
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 404, w.Code)
+	s.Assert().Equal(404, w.Code)
 }
 
-func TestAuthLogoutValidLoginThenLogoutThenLogin200(t *testing.T) {
+func (s *AuthLogoutTestSuite) TestAuthLogoutValidLoginThenLogoutThenLogin200() {
 	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
 	loginRequest, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
@@ -54,7 +58,7 @@ func TestAuthLogoutValidLoginThenLogoutThenLogin200(t *testing.T) {
 	w = httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, logoutRequest)
 
-	assert.Equal(t, 200, w.Code)
+	s.Assert().Equal(200, w.Code)
 
 	// Login for the second time
 	loginRequest.AddCookie(session)
@@ -63,7 +67,7 @@ func TestAuthLogoutValidLoginThenLogoutThenLogin200(t *testing.T) {
 
 	resp = http.Response{Header: w.HeaderMap}
 
-	assert.Equal(t, 0, len(resp.Cookies()))
-	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "", w.Body.String())
+	s.Assert().Equal(0, len(resp.Cookies()))
+	s.Assert().Equal(200, w.Code)
+	s.Assert().Equal("", w.Body.String())
 }
