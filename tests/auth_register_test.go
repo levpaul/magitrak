@@ -108,6 +108,6 @@ func (s *AuthRegisterTestSuite) TestAuthRegisterRegisterSameEmailTwiceReturns400
 }
 
 func cleanupRegisterTest() {
-	user, err := models.GetUserByEmail("some@email.com")
+	user, _ := models.GetUserByEmail("some@email.com")
 	user.Delete()
 }
