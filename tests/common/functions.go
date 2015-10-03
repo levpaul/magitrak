@@ -8,6 +8,10 @@ import (
 	"github.com/astaxie/beego"
 )
 
+const (
+	SESSION_USER_ID = 1
+)
+
 func GetValidLoggedInSessionCookie() *http.Cookie {
 	body := []byte(`{"email": "some@email.com", "password":"validpassword"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/login", bytes.NewBuffer(body))

@@ -15,10 +15,6 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-const (
-	SESSION_USER_ID = 1
-)
-
 type MatchTestSuite struct {
 	suite.Suite
 }
@@ -39,7 +35,7 @@ func (s *MatchTestSuite) SetupSuite() {
 	}
 }
 
-func (s *MatchTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
+func (s *MatchTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {
 	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -91,8 +87,13 @@ func (s *MatchTestSuite) TestMatchGETWithLoginReturns200() {
 	s.Assert().Equal(200, w.Code)
 }
 
+// Match Addition Tests
 // TestMatchPOSTNoPlayerDeckReturns400
 // TestMatchPOSTNoOpponentDeckReturns400
 // TestMatchPOSTNoDateReturns400
 // TestMatchPOSTValidSampleMatchAReturn200AndGetAReturn200
 // TestMatchPOSTValidSampleMatchBReturn200AndGetBReturn200
+
+// Match Get Tests
+// TestMatchGETInvalidIdReturns404
+//
