@@ -58,7 +58,7 @@ func (s *AuthRegisterTestSuite) TestAuthRegisterInvalidJSONReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-func (s *AuthRegisterTestSuite) TesAuthRegistertTooSmallPasswordReturns400() {
+func (s *AuthRegisterTestSuite) TestAuthRegistertTooSmallPasswordReturns400() {
 	body := []byte(`{"email":"asfd@gmail.com", "password":"small"}`)
 	r, _ := http.NewRequest("POST", "/v1/auth/register", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
