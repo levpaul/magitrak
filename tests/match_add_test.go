@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	_ "github.com/levilovelock/magitrak/routers"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -20,10 +18,16 @@ const (
 	SESSION_USER_ID = 1
 )
 
-func init() {
-	_, file, _, _ := runtime.Caller(1)
-	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".."+string(filepath.Separator))))
-	beego.TestBeegoInit(apppath)
+type MatchAddTestSuite struct {
+	suite.Suite
+}
+
+func TestMatchAddTestSuite(t *testing.T) {
+	suite.Run(t, new(MatchAddTestSuite))
+}
+
+func (s *MatchAddTestSuite) SetupSuite() {
+	beego.TestBeegoInit("../../../levilovelock/magitrak")
 
 	dbAddress := beego.AppConfig.String("modelORMPrepopulatedAdress")
 	dbType := beego.AppConfig.String("modelORMdb")
@@ -34,7 +38,7 @@ func init() {
 	}
 }
 
-func TestMatchPOSTWithInvalidMatchReturns400(t *testing.T) {
+func (s *MatchAddTestSuite) TestMatchPOSTWithInvalidMatchReturns400() {
 	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -42,10 +46,10 @@ func TestMatchPOSTWithInvalidMatchReturns400(t *testing.T) {
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 400, w.Code)
+	s.Assert().Equal(400, w.Code)
 }
 
-func TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400(t *testing.T) {
+func (s *MatchAddTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400() {
 	body := []byte(`{"userid": 4}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -53,10 +57,10 @@ func TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400(t *testing.T) 
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 400, w.Code)
+	s.Assert().Equal(400, w.Code)
 }
 
-func TestMatchPOSTValidUserIdAndMatchReturns200(t *testing.T) {
+func (s *MatchAddTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 	body := []byte(`{"userid": 1}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -64,7 +68,7 @@ func TestMatchPOSTValidUserIdAndMatchReturns200(t *testing.T) {
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	assert.Equal(t, 200, w.Code)
+	s.Assert().Equal(200, w.Code)
 }
 
 func getValidLoggedInSessionCookie() *http.Cookie {
