@@ -15,15 +15,15 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-type MatchTestSuite struct {
+type MatchFuncTestSuite struct {
 	suite.Suite
 }
 
 func TestMatchTestSuite(t *testing.T) {
-	suite.Run(t, new(MatchTestSuite))
+	suite.Run(t, new(MatchFuncTestSuite))
 }
 
-func (s *MatchTestSuite) SetupSuite() {
+func (s *MatchFuncTestSuite) SetupSuite() {
 	beego.TestBeegoInit("../../../levilovelock/magitrak")
 
 	dbAddress := beego.AppConfig.String("modelORMPrepopulatedAdress")
@@ -35,7 +35,7 @@ func (s *MatchTestSuite) SetupSuite() {
 	}
 }
 
-func (s *MatchTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {
+func (s *MatchFuncTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {
 	body := []byte(`{"m"___,,L"'...aalidpassword"}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -46,7 +46,7 @@ func (s *MatchTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-func (s *MatchTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400() {
+func (s *MatchFuncTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionReturns400() {
 	body := []byte(`{"userid": 4}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -57,7 +57,7 @@ func (s *MatchTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionRetur
 	s.Assert().Equal(400, w.Code)
 }
 
-func (s *MatchTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
+func (s *MatchFuncTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 	body := []byte(`{"userid": 1}`)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -68,7 +68,7 @@ func (s *MatchTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
 	s.Assert().Equal(200, w.Code)
 }
 
-func (s *MatchTestSuite) TestMatchGETNoLoginReturns401() {
+func (s *MatchFuncTestSuite) TestMatchGETNoLoginReturns401() {
 	r, _ := http.NewRequest("GET", "/v1/match/1", nil)
 	w := httptest.NewRecorder()
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
@@ -77,7 +77,7 @@ func (s *MatchTestSuite) TestMatchGETNoLoginReturns401() {
 	s.Assert().Equal("/v1/auth/unauthorised", w.Header().Get("Location"))
 }
 
-func (s *MatchTestSuite) TestMatchGETWithLoginReturns200() {
+func (s *MatchFuncTestSuite) TestMatchGETWithLoginReturns200() {
 	r, _ := http.NewRequest("GET", "/v1/match/1", nil)
 	w := httptest.NewRecorder()
 	r.AddCookie(common.GetValidLoggedInSessionCookie())
@@ -91,9 +91,24 @@ func (s *MatchTestSuite) TestMatchGETWithLoginReturns200() {
 // TestMatchPOSTNoPlayerDeckReturns400
 // TestMatchPOSTNoOpponentDeckReturns400
 // TestMatchPOSTNoDateReturns400
-// TestMatchPOSTValidSampleMatchAReturn200AndGetAReturn200
-// TestMatchPOSTValidSampleMatchBReturn200AndGetBReturn200
 
 // Match Get Tests
 // TestMatchGETInvalidIdReturns404
-//
+
+// Match Delete Tests
+// TestMatchDELETEInvalidIDReturns404
+// TestMatchDELETEDifferentUserIDReturns400
+// TestMatchDELETEInvalidJSONReturns400
+
+// Match Complete Tests
+// TestMatchInsertRetrievalASuccess
+// TestMatchInsertRetrievalBSuccess
+// TestMatchInsertDeleteRetrieveSuccess
+
+// Match Retrieval Tests
+// TestMatchesGETInvalidJSON400
+// TestMatchesGETIncorrectUserID400
+// TestMatchesGETReturnsArray
+// TestMatchesInsertTwoThenGetReturnsAtLeastTwoSuccess
+
+// Then add some unit tests for match model funcs
