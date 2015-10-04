@@ -52,5 +52,8 @@ func (m *Match) Validate() error {
 	if m.PlayerDeck == "" {
 		return errors.New("No player deck supplied")
 	}
+	if m.Date.Equal(time.Time{}) {
+		return errors.New("No valid date given for match")
+	}
 	return nil
 }
