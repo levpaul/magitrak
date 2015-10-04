@@ -135,61 +135,90 @@ func (s *MatchFuncTestSuite) TestMatchGETInvalidIdReturns404() {
 }
 
 func (s *MatchFuncTestSuite) TestMatchInsertRetrievalASuccess() {
-	validMatchA := models.Match{
-		UserId:           common.SESSION_USER_ID,
-		Date:             time.Now(),
-		PlayerDeck:       "jund",
-		OpponentDeck:     "Titan",
-		Win:              true,
-		Reason:           "hand disruption + goyf",
-		Sideboard:        false,
-		PlayFirst:        true,
-		StartingHandSize: 7,
-		LandsInOpener:    2,
-		OpponentName:     "killah31",
-		Notes:            "na",
+	testMatches := []models.Match{
+		models.Match{
+			UserId:           common.SESSION_USER_ID,
+			Date:             time.Now(),
+			PlayerDeck:       "jund",
+			OpponentDeck:     "Titan",
+			Win:              true,
+			Reason:           "hand disruption + goyf",
+			Sideboard:        false,
+			PlayFirst:        true,
+			StartingHandSize: 7,
+			LandsInOpener:    2,
+			OpponentName:     "killah31",
+			Notes:            "na",
+		}, models.Match{
+			UserId:           common.SESSION_USER_ID,
+			Date:             time.Now().Add(time.Hour * 195),
+			PlayerDeck:       "twin",
+			OpponentDeck:     "burn",
+			Win:              false,
+			Reason:           "mana screwed",
+			Sideboard:        true,
+			PlayFirst:        true,
+			StartingHandSize: 6,
+			LandsInOpener:    1,
+			OpponentName:     "mangomaster",
+			Notes:            "had double serum visions, still no land in top 8 cards!",
+		}, models.Match{
+			UserId:           common.SESSION_USER_ID,
+			Date:             time.Now().Add(time.Hour * 543),
+			PlayerDeck:       "ad nauseam",
+			OpponentDeck:     "GR tron",
+			Win:              true,
+			Reason:           "no interaction, EZ",
+			Sideboard:        false,
+			PlayFirst:        false,
+			StartingHandSize: 7,
+			LandsInOpener:    4,
+			OpponentName:     "tehpwnerer",
+			Notes:            "always so EZ",
+		},
 	}
 
-	body, _ := json.Marshal(validMatchA)
+	for _, tm := range testMatches {
+		body, _ := json.Marshal(tm)
 
-	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
-	w := httptest.NewRecorder()
-	r.AddCookie(common.GetValidLoggedInSessionCookie())
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
+		r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+		w := httptest.NewRecorder()
+		r.AddCookie(common.GetValidLoggedInSessionCookie())
+		beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	s.Assert().Equal(200, w.Code)
+		s.Assert().Equal(200, w.Code)
 
-	// Parse match result for Match ID
-	type MatchResult struct{ MatchId string }
-	matchResult := &MatchResult{}
-	json.Unmarshal([]byte(w.Body.String()), matchResult)
+		// Parse match result for Match ID
+		type MatchResult struct{ MatchId string }
+		matchResult := &MatchResult{}
+		json.Unmarshal([]byte(w.Body.String()), matchResult)
 
-	r, _ = http.NewRequest("GET", "/v1/match/"+matchResult.MatchId, nil)
-	w = httptest.NewRecorder()
-	r.AddCookie(common.GetValidLoggedInSessionCookie())
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
+		r, _ = http.NewRequest("GET", "/v1/match/"+matchResult.MatchId, nil)
+		w = httptest.NewRecorder()
+		r.AddCookie(common.GetValidLoggedInSessionCookie())
+		beego.BeeApp.Handlers.ServeHTTP(w, r)
 
-	s.Assert().Equal(200, w.Code)
+		s.Assert().Equal(200, w.Code)
 
-	returnedMatch := &models.Match{}
-	json.Unmarshal([]byte(w.Body.String()), returnedMatch)
+		returnedMatch := &models.Match{}
+		json.Unmarshal([]byte(w.Body.String()), returnedMatch)
 
-	s.Assert().Equal(validMatchA.UserId, returnedMatch.UserId)
-	s.Assert().Equal(validMatchA.Date, returnedMatch.Date)
-	s.Assert().Equal(validMatchA.LandsInOpener, returnedMatch.LandsInOpener)
-	s.Assert().Equal(validMatchA.Notes, returnedMatch.Notes)
-	s.Assert().Equal(validMatchA.OpponentDeck, returnedMatch.OpponentDeck)
-	s.Assert().Equal(validMatchA.OpponentName, returnedMatch.OpponentName)
-	s.Assert().Equal(validMatchA.PlayerDeck, returnedMatch.PlayerDeck)
-	s.Assert().Equal(validMatchA.PlayFirst, returnedMatch.PlayFirst)
-	s.Assert().Equal(validMatchA.Reason, returnedMatch.Reason)
-	s.Assert().Equal(validMatchA.Sideboard, returnedMatch.Sideboard)
-	s.Assert().Equal(validMatchA.Win, returnedMatch.Win)
-	s.Assert().Equal(validMatchA.StartingHandSize, returnedMatch.StartingHandSize)
+		s.Assert().Equal(tm.UserId, returnedMatch.UserId)
+		s.Assert().Equal(tm.Date, returnedMatch.Date)
+		s.Assert().Equal(tm.LandsInOpener, returnedMatch.LandsInOpener)
+		s.Assert().Equal(tm.Notes, returnedMatch.Notes)
+		s.Assert().Equal(tm.OpponentDeck, returnedMatch.OpponentDeck)
+		s.Assert().Equal(tm.OpponentName, returnedMatch.OpponentName)
+		s.Assert().Equal(tm.PlayerDeck, returnedMatch.PlayerDeck)
+		s.Assert().Equal(tm.PlayFirst, returnedMatch.PlayFirst)
+		s.Assert().Equal(tm.Reason, returnedMatch.Reason)
+		s.Assert().Equal(tm.Sideboard, returnedMatch.Sideboard)
+		s.Assert().Equal(tm.Win, returnedMatch.Win)
+		s.Assert().Equal(tm.StartingHandSize, returnedMatch.StartingHandSize)
+	}
 }
 
 // Match Complete Tests
-// TestMatchInsertRetrievalBSuccess
 // TestMatchInsertDeleteRetrieveSuccess
 
 // Match Delete Tests
