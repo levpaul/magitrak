@@ -1,13 +1,18 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
+
+	"gopkg.in/olivere/elastic.v2"
 )
 
 const (
 	ELASTIC_MATCH_TYPE = "match"
 	ELASTIC_INDEX      = "magitrak"
+
+	NO_MATCH_FOUND_ERROR = "No match found"
 )
 
 var (
@@ -33,11 +38,66 @@ func init() {
 	Matches = make(map[string]*Match)
 }
 
-func GetOne(matchId string) (*Match, error) {
-	match := Matches[matchId]
-	if match == nil {
-		return nil, errors.New("No match found with id: " + matchId)
+func InsertMatch(m Match) (string, error) {
+	client, elasticClientErr := elastic.NewClient()
+	if elasticClientErr != nil {
+		return "", elasticClientErr
 	}
+
+	matchData, marshalErr := json.Marshal(m)
+	if marshalErr != nil {
+		return "", marshalErr
+	}
+
+	matchId, elasticInsertErr := client.Index().
+		Index(ELASTIC_INDEX).
+		Type(ELASTIC_MATCH_TYPE).
+		BodyJson(string(matchData)).
+		Do()
+
+	if elasticInsertErr != nil {
+		return "", elasticInsertErr
+	}
+
+	if matchId.Created == false || matchId.Id == "" {
+		return "", errors.New("Match was not created")
+	}
+
+	return matchId.Id, nil
+}
+
+func GetOne(matchId string) (*Match, error) {
+	client, elasticClientErr := elastic.NewClient()
+	if elasticClientErr != nil {
+		return nil, elasticClientErr
+	}
+
+	matchResult, elasticSearchErr := client.Get().
+		Index(ELASTIC_INDEX).
+		Type(ELASTIC_MATCH_TYPE).
+		Id(matchId).
+		Do()
+
+	if elasticSearchErr != nil {
+		return nil, elasticSearchErr
+	}
+
+	if !matchResult.Found {
+		return nil, errors.New(NO_MATCH_FOUND_ERROR)
+	}
+
+	match := &Match{}
+
+	sourceData, unmarshalErr := matchResult.Source.MarshalJSON()
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+
+	unmarshalErr = json.Unmarshal(sourceData, match)
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+
 	return match, nil
 }
 

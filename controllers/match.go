@@ -3,8 +3,6 @@ package controllers
 import (
 	"encoding/json"
 
-	"gopkg.in/olivere/elastic.v2"
-
 	"github.com/levilovelock/magitrak/models"
 
 	"github.com/astaxie/beego"
@@ -30,13 +28,6 @@ func (m *MatchController) Create() {
 		m.Abort("400")
 	}
 
-	// Create a client
-	client, elasticClientErr := elastic.NewClient()
-	if elasticClientErr != nil {
-		beego.Debug("Error connecting to ElasticSearch:", elasticClientErr.Error())
-		m.Abort("500")
-	}
-
 	magiSession := m.GetSession(models.SESSION_NAME)
 	if magiSession == nil {
 		beego.Debug("Failed to find valid session for match creation request")
@@ -48,23 +39,13 @@ func (m *MatchController) Create() {
 		m.Abort("400")
 	}
 
-	matchData, marshalErr := json.Marshal(match)
-	if marshalErr != nil {
-		beego.Debug("Failed to marsahl match object:", marshalErr)
+	matchId, insertErr := models.InsertMatch(match)
+	if insertErr != nil {
+		beego.Debug("Error inserting match into ElasticSearch:", insertErr.Error())
+		m.Abort("500")
 	}
 
-	_, elasticInsertErr := client.Index().
-		Index(models.ELASTIC_INDEX).
-		Type(models.ELASTIC_MATCH_TYPE).
-		BodyJson(string(matchData)).
-		Do()
-
-	if elasticInsertErr != nil {
-		beego.Debug("Failed to insert document into ElasticSearch:", elasticInsertErr.Error())
-		m.Abort("501")
-	}
-
-	m.Data["json"] = map[string]string{"MatchId": "some-uuid"}
+	m.Data["json"] = map[string]string{"MatchId": matchId}
 	m.ServeJson()
 }
 
@@ -74,8 +55,18 @@ func (m *MatchController) GetSingle() {
 	if matchId != "" {
 		match, err := models.GetOne(matchId)
 		if err != nil {
-			m.Data["json"] = err
+			if err.Error() == models.NO_MATCH_FOUND_ERROR {
+				m.Abort("404")
+			} else {
+				beego.Debug("Error finding match in GET for match id and err: ", matchId, err.Error())
+				m.Abort("500")
+			}
 		} else {
+			session := m.GetSession(models.SESSION_NAME).(models.MagiSession)
+			if match.UserId != session.UserId {
+				beego.Debug("Unauthorised GET request for match", matchId, "from session belonging to user", session.UserId)
+				m.Abort("400")
+			}
 			m.Data["json"] = match
 		}
 	}

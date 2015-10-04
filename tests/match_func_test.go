@@ -82,16 +82,6 @@ func (s *MatchFuncTestSuite) TestMatchGETNoLoginReturns401() {
 	s.Assert().Equal("/v1/auth/unauthorised", w.Header().Get("Location"))
 }
 
-func (s *MatchFuncTestSuite) TestMatchGETWithLoginReturns200() {
-	r, _ := http.NewRequest("GET", "/v1/match/1", nil)
-	w := httptest.NewRecorder()
-	r.AddCookie(common.GetValidLoggedInSessionCookie())
-
-	beego.BeeApp.Handlers.ServeHTTP(w, r)
-
-	s.Assert().Equal(200, w.Code)
-}
-
 func (s *MatchFuncTestSuite) TestMatchPOSTNoPlayerDeckReturns400() {
 	bodyObject := getValidMatch()
 	bodyObject.PlayerDeck = ""
@@ -120,7 +110,6 @@ func (s *MatchFuncTestSuite) TestMatchPOSTNoOpponentDeckReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-// Match Addition Tests
 func (s *MatchFuncTestSuite) TestMatchPOSTNoDateReturns400() {
 	bodyObject := getValidMatch()
 	bodyObject.Date = time.Time{}
@@ -135,8 +124,16 @@ func (s *MatchFuncTestSuite) TestMatchPOSTNoDateReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-// Match Get Tests
-// TestMatchGETInvalidIdReturns404
+func (s *MatchFuncTestSuite) TestMatchGETInvalidIdReturns404() {
+	r, _ := http.NewRequest("GET", "/v1/match/1234567", nil)
+	w := httptest.NewRecorder()
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	beego.Debug("SOMETHING:", w.Body)
+	s.Assert().Equal(404, w.Code)
+}
 
 // Match Delete Tests
 // TestMatchDELETEInvalidIDReturns404
