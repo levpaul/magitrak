@@ -44,3 +44,10 @@ func GetOne(matchId string) (*Match, error) {
 func Delete(objectId string) {
 	delete(Matches, objectId)
 }
+
+func (m *Match) Validate() error {
+	if m.OpponentDeck == "" {
+		return errors.New("No opponent deck supplied")
+	}
+	return nil
+}

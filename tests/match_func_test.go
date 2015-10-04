@@ -6,10 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/levilovelock/magitrak/models"
 	_ "github.com/levilovelock/magitrak/routers"
 	"github.com/levilovelock/magitrak/tests/common"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
+
+	"encoding/json"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -58,7 +61,8 @@ func (s *MatchFuncTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionR
 }
 
 func (s *MatchFuncTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
-	body := []byte(`{"userid": 1}`)
+	bodyObject := GetValidMatch()
+	body, _ := json.Marshal(bodyObject)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
 	r.AddCookie(common.GetValidLoggedInSessionCookie())
@@ -87,8 +91,25 @@ func (s *MatchFuncTestSuite) TestMatchGETWithLoginReturns200() {
 	s.Assert().Equal(200, w.Code)
 }
 
+func (s *MatchFuncTestSuite) TestMatchPOSTNoPlayerDeckReturns400() {
+	bodyObject := GetValidMatch()
+	bodyObject.OpponentDeck = ""
+
+	body, _ := json.Marshal(bodyObject)
+
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(400, w.Code)
+}
+
+func GetValidMatch() models.Match {
+	return models.Match{UserId: 1, PlayerDeck: "burn", OpponentDeck: "bloom"}
+}
+
 // Match Addition Tests
-// TestMatchPOSTNoPlayerDeckReturns400
 // TestMatchPOSTNoOpponentDeckReturns400
 // TestMatchPOSTNoDateReturns400
 

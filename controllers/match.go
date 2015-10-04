@@ -24,6 +24,12 @@ func (m *MatchController) Create() {
 		m.Abort("400")
 	}
 
+	validationErr := match.Validate()
+	if validationErr != nil {
+		beego.Debug("Error validating match for POST:", validationErr.Error())
+		m.Abort("400")
+	}
+
 	// Create a client
 	client, elasticClientErr := elastic.NewClient()
 	if elasticClientErr != nil {
