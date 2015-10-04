@@ -49,5 +49,8 @@ func (m *Match) Validate() error {
 	if m.OpponentDeck == "" {
 		return errors.New("No opponent deck supplied")
 	}
+	if m.PlayerDeck == "" {
+		return errors.New("No player deck supplied")
+	}
 	return nil
 }

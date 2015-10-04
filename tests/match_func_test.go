@@ -61,7 +61,7 @@ func (s *MatchFuncTestSuite) TestMatchPOSTWithDifferentUserIdInMatchThanSessionR
 }
 
 func (s *MatchFuncTestSuite) TestMatchPOSTValidUserIdAndMatchReturns200() {
-	bodyObject := GetValidMatch()
+	bodyObject := getValidMatch()
 	body, _ := json.Marshal(bodyObject)
 
 	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
@@ -92,7 +92,21 @@ func (s *MatchFuncTestSuite) TestMatchGETWithLoginReturns200() {
 }
 
 func (s *MatchFuncTestSuite) TestMatchPOSTNoPlayerDeckReturns400() {
-	bodyObject := GetValidMatch()
+	bodyObject := getValidMatch()
+	bodyObject.PlayerDeck = ""
+
+	body, _ := json.Marshal(bodyObject)
+
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(400, w.Code)
+}
+
+func (s *MatchFuncTestSuite) TestMatchPOSTNoOpponentDeckReturns400() {
+	bodyObject := getValidMatch()
 	bodyObject.OpponentDeck = ""
 
 	body, _ := json.Marshal(bodyObject)
@@ -105,12 +119,7 @@ func (s *MatchFuncTestSuite) TestMatchPOSTNoPlayerDeckReturns400() {
 	s.Assert().Equal(400, w.Code)
 }
 
-func GetValidMatch() models.Match {
-	return models.Match{UserId: 1, PlayerDeck: "burn", OpponentDeck: "bloom"}
-}
-
 // Match Addition Tests
-// TestMatchPOSTNoOpponentDeckReturns400
 // TestMatchPOSTNoDateReturns400
 
 // Match Get Tests
@@ -133,3 +142,7 @@ func GetValidMatch() models.Match {
 // TestMatchesInsertTwoThenGetReturnsAtLeastTwoSuccess
 
 // Then add some unit tests for match model funcs
+
+func getValidMatch() models.Match {
+	return models.Match{UserId: 1, PlayerDeck: "burn", OpponentDeck: "bloom"}
+}
