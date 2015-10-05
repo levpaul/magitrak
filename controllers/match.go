@@ -90,7 +90,12 @@ func (m *MatchController) Delete() {
 		m.Abort("400")
 	}
 
-	models.Delete(matchId)
+	deleteResult := models.Delete(matchId)
+
+	if deleteResult != true {
+		m.Abort("500")
+	}
+
 	m.Data["json"] = "delete success!"
 	m.ServeJson()
 }

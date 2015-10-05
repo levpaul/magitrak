@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/astaxie/beego"
+
 	"gopkg.in/olivere/elastic.v2"
 )
 
@@ -101,8 +103,30 @@ func GetOne(matchId string) (*Match, error) {
 	return match, nil
 }
 
-func Delete(objectId string) {
-	delete(Matches, objectId)
+func Delete(matchId string) bool {
+	client, elasticClientErr := elastic.NewClient()
+	if elasticClientErr != nil {
+		beego.Debug("Error deleting match: ", matchId, " - error:", elasticClientErr.Error())
+		return false
+	}
+
+	deleteResult, elasticSearchErr := client.Delete().
+		Index(ELASTIC_INDEX).
+		Type(ELASTIC_MATCH_TYPE).
+		Id(matchId).
+		Do()
+
+	if elasticSearchErr != nil {
+		beego.Debug("Error deleting match: ", matchId, " - error:", elasticSearchErr.Error())
+		return false
+	}
+
+	if !deleteResult.Found {
+		beego.Debug("Error deleting match: ", matchId, " - error:", elasticClientErr.Error())
+		return false
+	}
+
+	return true
 }
 
 func (m *Match) Validate() error {
