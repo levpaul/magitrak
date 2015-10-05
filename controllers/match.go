@@ -52,23 +52,21 @@ func (m *MatchController) Create() {
 // @router /:matchId [get]
 func (m *MatchController) GetSingle() {
 	matchId := m.Ctx.Input.Params[":matchId"]
-	if matchId != "" {
-		match, err := models.GetOne(matchId)
-		if err != nil {
-			if err.Error() == models.NO_MATCH_FOUND_ERROR {
-				m.Abort("404")
-			} else {
-				beego.Debug("Error finding match in GET for match id and err: ", matchId, err.Error())
-				m.Abort("500")
-			}
+	match, err := models.GetOne(matchId)
+	if err != nil {
+		if err.Error() == models.NO_MATCH_FOUND_ERROR {
+			m.Abort("404")
 		} else {
-			session := m.GetSession(models.SESSION_NAME).(models.MagiSession)
-			if match.UserId != session.UserId {
-				beego.Debug("Unauthorised GET request for match", matchId, "from session belonging to user", session.UserId)
-				m.Abort("400")
-			}
-			m.Data["json"] = match
+			beego.Debug("Error finding match in GET for match id and err: ", matchId, err.Error())
+			m.Abort("500")
 		}
+	} else {
+		session := m.GetSession(models.SESSION_NAME).(models.MagiSession)
+		if match.UserId != session.UserId {
+			beego.Debug("Unauthorised GET request for match", matchId, "from session belonging to user", session.UserId)
+			m.Abort("400")
+		}
+		m.Data["json"] = match
 	}
 	m.ServeJson()
 }
