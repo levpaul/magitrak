@@ -304,8 +304,15 @@ func (s *MatchFuncTestSuite) TestMatchInsertDeleteRetrieveSuccess() {
 	s.Assert().Equal(404, w.Code)
 }
 
+func (s *MatchFuncTestSuite) TestMatchesAllGETNoSession302() {
+	r, _ := http.NewRequest("GET", "/v1/match", nil)
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(302, w.Code)
+}
+
 // Matches Retrieval Tests
-// TestMatchesGETInvalidJSON400
 // TestMatchesGETIncorrectUserID400
 // TestMatchesGETReturnsArray
 // TestMatchesInsertTwoThenGetReturnsAtLeastTwoSuccess
