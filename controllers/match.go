@@ -102,6 +102,14 @@ func (m *MatchController) Delete() {
 
 // @router / [get]
 func (m *MatchController) GetAll() {
-	// validate session
-	// return all matches for user
+	userId := m.GetSession(models.SESSION_NAME).(models.MagiSession).UserId
+
+	matches, err := models.GetAll(userId)
+	if err != nil {
+		beego.Debug("Error getting matches in GET all, err: ", err.Error())
+		m.Abort("500")
+	}
+
+	m.Data["json"] = matches
+	m.ServeJson()
 }

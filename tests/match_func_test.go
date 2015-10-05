@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"gopkg.in/olivere/elastic.v2"
+
 	"github.com/levilovelock/magitrak/models"
 	_ "github.com/levilovelock/magitrak/routers"
 	"github.com/levilovelock/magitrak/tests/common"
@@ -37,6 +39,10 @@ func (s *MatchFuncTestSuite) SetupSuite() {
 	if dbErr != nil {
 		beego.Error(dbErr)
 	}
+
+	// Cleanse the ES data
+	client, _ := elastic.NewClient()
+	client.DeleteIndex(models.ELASTIC_INDEX).Do()
 }
 
 func (s *MatchFuncTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {
@@ -312,12 +318,66 @@ func (s *MatchFuncTestSuite) TestMatchesAllGETNoSession302() {
 	s.Assert().Equal(302, w.Code)
 }
 
-// Matches Retrieval Tests
-// TestMatchesGETIncorrectUserID400
-// TestMatchesGETReturnsArray
-// TestMatchesInsertTwoThenGetReturnsAtLeastTwoSuccess
+func (s *MatchFuncTestSuite) TestMatchAddTwoMatchesThenGetAllSuccess() {
+	var match1, match2 *models.Match
+	match1 = &models.Match{UserId: 1, PlayerDeck: "jund", OpponentDeck: "burn", Date: time.Now()}
+	match2 = &models.Match{UserId: 1, PlayerDeck: "junk", OpponentDeck: "ur twin", Date: time.Now().Add(time.Hour * -99)}
 
-// Then add some unit tests for match model funcs
+	// Add match1
+	body, _ := json.Marshal(match1)
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+	s.Assert().Equal(200, w.Code)
+	beego.Debug("THE INSERT:", w.Body.String())
+
+	// Add match2
+	body, _ = json.Marshal(match2)
+	r, _ = http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	w = httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+	s.Assert().Equal(200, w.Code)
+	beego.Debug("THE INSERT:", w.Body.String())
+
+	// Retry this test upto 10 times
+	testsPass := false
+
+	r, _ = http.NewRequest("GET", "/v1/match", nil)
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	for i := 0; i < 10; i++ {
+		w = httptest.NewRecorder()
+		beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+		s.Assert().Equal(200, w.Code)
+
+		// Parse results
+		results := &[]models.Match{}
+		json.Unmarshal(w.Body.Bytes(), results)
+
+		// Find match 1 and match 2 in the results
+		match1Found := false
+		match2Found := false
+		for _, match := range *results {
+			s.Assert().True(match.UserId == common.SESSION_USER_ID)
+			if match.Date == match1.Date && match.OpponentDeck == match1.OpponentDeck && match.PlayerDeck == match1.PlayerDeck {
+				match1Found = true
+			}
+			if match.Date == match2.Date && match.OpponentDeck == match2.OpponentDeck && match.PlayerDeck == match2.PlayerDeck {
+				match2Found = true
+			}
+		}
+
+		if match1Found && match2Found {
+			testsPass = true
+			break
+		} else {
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
+	s.Assert().True(testsPass)
+}
 
 func getValidMatch() models.Match {
 	return models.Match{UserId: 1, PlayerDeck: "burn", OpponentDeck: "bloom", Date: time.Now()}

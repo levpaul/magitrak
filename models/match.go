@@ -17,10 +17,6 @@ const (
 	NO_MATCH_FOUND_ERROR = "No match found"
 )
 
-var (
-	Matches map[string]*Match
-)
-
 type Match struct {
 	UserId           int
 	Date             time.Time
@@ -34,10 +30,6 @@ type Match struct {
 	LandsInOpener    int
 	OpponentName     string
 	Notes            string
-}
-
-func init() {
-	Matches = make(map[string]*Match)
 }
 
 func InsertMatch(m Match) (string, error) {
@@ -101,6 +93,46 @@ func GetOne(matchId string) (*Match, error) {
 	}
 
 	return match, nil
+}
+
+func GetAll(userId int) ([]*Match, error) {
+	client, elasticClientErr := elastic.NewClient()
+	if elasticClientErr != nil {
+		return nil, elasticClientErr
+	}
+
+	termQuery := elastic.NewTermQuery("UserId", userId)
+	matchResult, elasticSearchErr := client.Search().
+		Index(ELASTIC_INDEX).
+		Type(ELASTIC_MATCH_TYPE).
+		Query(termQuery).
+		Size(9999).
+		Do()
+
+	if elasticSearchErr != nil {
+		return nil, elasticSearchErr
+	}
+
+	if matchResult.Hits.TotalHits == 0 {
+		return []*Match{}, nil
+	}
+
+	matches := []*Match{}
+
+	for _, hit := range matchResult.Hits.Hits {
+		match := &Match{}
+		sourceData, unmarshalErr := hit.Source.MarshalJSON()
+		if unmarshalErr != nil {
+			return nil, unmarshalErr
+		}
+		unmarshalErr = json.Unmarshal(sourceData, match)
+		if unmarshalErr != nil {
+			return nil, unmarshalErr
+		}
+		matches = append(matches, match)
+	}
+
+	return matches, nil
 }
 
 func Delete(matchId string) bool {
