@@ -134,6 +134,29 @@ func (s *MatchFuncTestSuite) TestMatchGETInvalidIdReturns404() {
 	s.Assert().Equal(404, w.Code)
 }
 
+func (s *MatchFuncTestSuite) TestMatchGETDifferentUserIDReturns400() {
+	bodyObject := getValidMatch()
+	body, _ := json.Marshal(bodyObject)
+
+	r, _ := http.NewRequest("POST", "/v1/match", bytes.NewBuffer(body))
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+	w := httptest.NewRecorder()
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	// Retrieve matchId
+	type MatchResult struct{ MatchId string }
+	matchResult := &MatchResult{}
+	json.Unmarshal([]byte(w.Body.String()), matchResult)
+
+	r, _ = http.NewRequest("GET", "/v1/match/"+matchResult.MatchId, bytes.NewBuffer([]byte{}))
+	w = httptest.NewRecorder()
+	r.AddCookie(common.GetValidLoggedInSessionCookieOtherUser())
+
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(400, w.Code)
+}
+
 func (s *MatchFuncTestSuite) TestMatchInsertRetrievalASuccess() {
 	testMatches := []models.Match{
 		models.Match{
