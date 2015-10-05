@@ -74,6 +74,16 @@ func (m *MatchController) GetSingle() {
 // @router /:matchId [delete]
 func (m *MatchController) Delete() {
 	matchId := m.Ctx.Input.Params[":matchId"]
+
+	_, findErr := models.GetOne(matchId)
+	if findErr != nil {
+		if findErr.Error() == models.NO_MATCH_FOUND_ERROR {
+			m.Abort("404")
+		} else {
+			m.Abort("500")
+		}
+	}
+
 	models.Delete(matchId)
 	m.Data["json"] = "delete success!"
 	m.ServeJson()

@@ -218,11 +218,20 @@ func (s *MatchFuncTestSuite) TestMatchInsertRetrievalASuccess() {
 	}
 }
 
+func (s *MatchFuncTestSuite) TestMatchDELETEInvalidIDReturns404() {
+	r, _ := http.NewRequest("DELETE", "/v1/match/1234567", bytes.NewBuffer([]byte{}))
+	w := httptest.NewRecorder()
+	r.AddCookie(common.GetValidLoggedInSessionCookie())
+
+	beego.BeeApp.Handlers.ServeHTTP(w, r)
+
+	s.Assert().Equal(404, w.Code)
+}
+
 // Match Complete Tests
 // TestMatchInsertDeleteRetrieveSuccess
 
 // Match Delete Tests
-// TestMatchDELETEInvalidIDReturns404
 // TestMatchDELETEDifferentUserIDReturns400
 // TestMatchDELETEInvalidJSONReturns400
 
