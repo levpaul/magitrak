@@ -75,13 +75,19 @@ func (m *MatchController) GetSingle() {
 func (m *MatchController) Delete() {
 	matchId := m.Ctx.Input.Params[":matchId"]
 
-	_, findErr := models.GetOne(matchId)
+	match, findErr := models.GetOne(matchId)
 	if findErr != nil {
 		if findErr.Error() == models.NO_MATCH_FOUND_ERROR {
 			m.Abort("404")
 		} else {
 			m.Abort("500")
 		}
+	}
+
+	session := m.GetSession(models.SESSION_NAME).(models.MagiSession)
+	if session.UserId != match.UserId {
+		beego.Debug("Delete request for match belonging to different user found, user:", match.UserId)
+		m.Abort("400")
 	}
 
 	models.Delete(matchId)
