@@ -46,12 +46,12 @@ func (m *MatchController) Create() {
 	}
 
 	m.Data["json"] = map[string]string{"MatchId": matchId}
-	m.ServeJson()
+	m.ServeJSON()
 }
 
 // @router /:matchId [get]
 func (m *MatchController) GetSingle() {
-	matchId := m.Ctx.Input.Params[":matchId"]
+	matchId := m.Ctx.Input.Param(":matchId")
 	match, err := models.GetOne(matchId)
 	if err != nil {
 		if err.Error() == models.NO_MATCH_FOUND_ERROR {
@@ -68,12 +68,12 @@ func (m *MatchController) GetSingle() {
 		}
 		m.Data["json"] = match
 	}
-	m.ServeJson()
+	m.ServeJSON()
 }
 
 // @router /:matchId [delete]
 func (m *MatchController) Delete() {
-	matchId := m.Ctx.Input.Params[":matchId"]
+	matchId := m.Ctx.Input.Param(":matchId")
 
 	match, findErr := models.GetOne(matchId)
 	if findErr != nil {
@@ -97,7 +97,7 @@ func (m *MatchController) Delete() {
 	}
 
 	m.Data["json"] = "delete success!"
-	m.ServeJson()
+	m.ServeJSON()
 }
 
 // @router / [get]
@@ -111,5 +111,5 @@ func (m *MatchController) GetAll() {
 	}
 
 	m.Data["json"] = matches
-	m.ServeJson()
+	m.ServeJSON()
 }

@@ -71,7 +71,7 @@ func (a *AuthController) Register() {
 		Id int
 	}
 	a.Data["json"] = response{Id: newUser.Id}
-	a.ServeJson()
+	a.ServeJSON()
 }
 
 // @router /unauthorised [get]
