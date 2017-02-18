@@ -2,12 +2,16 @@ package test
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
-	"gopkg.in/olivere/elastic.v2"
+	elastic "gopkg.in/olivere/elastic.v5"
 
 	"github.com/levilovelock/magitrak/models"
 	_ "github.com/levilovelock/magitrak/routers"
@@ -15,11 +19,16 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 
-	"encoding/json"
-
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 )
+
+func init() {
+	// We initialise the beego here because the SuiteSetup changes dir to testify home
+	_, file, _, _ := runtime.Caller(1)
+	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".."+string(filepath.Separator))) + "/tests")
+	beego.TestBeegoInit(apppath)
+}
 
 type MatchFuncTestSuite struct {
 	suite.Suite
@@ -30,8 +39,6 @@ func TestMatchTestSuite(t *testing.T) {
 }
 
 func (s *MatchFuncTestSuite) SetupSuite() {
-	beego.TestBeegoInit("../../../levilovelock/magitrak")
-
 	dbAddress := beego.AppConfig.String("modelORMPrepopulatedAdress")
 	dbType := beego.AppConfig.String("modelORMdb")
 
@@ -41,8 +48,13 @@ func (s *MatchFuncTestSuite) SetupSuite() {
 	}
 
 	// Cleanse the ES data
-	client, _ := elastic.NewClient()
-	client.DeleteIndex(models.ELASTIC_INDEX).Do()
+	ctx := context.Background()
+	client, err := elastic.NewClient(elastic.SetBasicAuth("elastic", "changeme"))
+	if err != nil {
+		panic(err)
+	}
+	client.DeleteIndex(models.ELASTIC_INDEX).Do(ctx)
+	client.CreateIndex(models.ELASTIC_INDEX).Do(ctx)
 }
 
 func (s *MatchFuncTestSuite) TestMatchPOSTWithInvalidJSONReturns400() {

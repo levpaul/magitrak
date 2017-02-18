@@ -3,6 +3,8 @@ package test
 import (
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/astaxie/beego/orm"
@@ -16,6 +18,13 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+func init() {
+	// We initialise the beego here because the SuiteSetup changes dir to testify home
+	_, file, _, _ := runtime.Caller(1)
+	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".."+string(filepath.Separator))) + "/tests")
+	beego.TestBeegoInit(apppath)
+}
+
 type AuthRegisterTestSuite struct {
 	suite.Suite
 }
@@ -25,8 +34,6 @@ func TestAuthRegisterTestSuite(t *testing.T) {
 }
 
 func (s *AuthRegisterTestSuite) SetupSuite() {
-	beego.TestBeegoInit("../../../levilovelock/magitrak")
-
 	dbAddress := beego.AppConfig.String("modelORMaddress")
 	dbType := beego.AppConfig.String("modelORMdb")
 

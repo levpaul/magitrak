@@ -1,20 +1,25 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/astaxie/beego"
 
-	"gopkg.in/olivere/elastic.v2"
+	elastic "gopkg.in/olivere/elastic.v5"
 )
 
 const (
 	ELASTIC_MATCH_TYPE = "match"
 	ELASTIC_INDEX      = "magitrak"
 
-	NO_MATCH_FOUND_ERROR = "No match found"
+	NO_MATCH_FOUND_ERROR = "elastic: Error 404 (Not Found)"
+)
+
+var (
+	eslogin, espass string
 )
 
 type Match struct {
@@ -32,8 +37,20 @@ type Match struct {
 	Notes            string
 }
 
+func initESCreds() {
+	if eslogin == "" {
+		eslogin = beego.AppConfig.String("ElasticAuthName")
+	}
+
+	if espass == "" {
+		espass = beego.AppConfig.String("ElasticAuthPass")
+	}
+}
+
 func InsertMatch(m Match) (string, error) {
-	client, elasticClientErr := elastic.NewClient()
+	initESCreds()
+	ctx := context.Background()
+	client, elasticClientErr := elastic.NewClient(elastic.SetBasicAuth(eslogin, espass))
 	if elasticClientErr != nil {
 		return "", elasticClientErr
 	}
@@ -47,7 +64,7 @@ func InsertMatch(m Match) (string, error) {
 		Index(ELASTIC_INDEX).
 		Type(ELASTIC_MATCH_TYPE).
 		BodyJson(string(matchData)).
-		Do()
+		Do(ctx)
 
 	if elasticInsertErr != nil {
 		return "", elasticInsertErr
@@ -61,7 +78,10 @@ func InsertMatch(m Match) (string, error) {
 }
 
 func GetOne(matchId string) (*Match, error) {
-	client, elasticClientErr := elastic.NewClient()
+	initESCreds()
+	ctx := context.Background()
+	client, elasticClientErr := elastic.NewClient(elastic.SetBasicAuth(eslogin, espass))
+
 	if elasticClientErr != nil {
 		return nil, elasticClientErr
 	}
@@ -70,7 +90,7 @@ func GetOne(matchId string) (*Match, error) {
 		Index(ELASTIC_INDEX).
 		Type(ELASTIC_MATCH_TYPE).
 		Id(matchId).
-		Do()
+		Do(ctx)
 
 	if elasticSearchErr != nil {
 		return nil, elasticSearchErr
@@ -96,7 +116,10 @@ func GetOne(matchId string) (*Match, error) {
 }
 
 func GetAll(userId int) ([]*Match, error) {
-	client, elasticClientErr := elastic.NewClient()
+	initESCreds()
+	ctx := context.Background()
+	client, elasticClientErr := elastic.NewClient(elastic.SetBasicAuth(eslogin, espass))
+
 	if elasticClientErr != nil {
 		return nil, elasticClientErr
 	}
@@ -107,7 +130,7 @@ func GetAll(userId int) ([]*Match, error) {
 		Type(ELASTIC_MATCH_TYPE).
 		Query(termQuery).
 		Size(9999).
-		Do()
+		Do(ctx)
 
 	if elasticSearchErr != nil {
 		return nil, elasticSearchErr
@@ -136,7 +159,10 @@ func GetAll(userId int) ([]*Match, error) {
 }
 
 func Delete(matchId string) bool {
-	client, elasticClientErr := elastic.NewClient()
+	initESCreds()
+	ctx := context.Background()
+	client, elasticClientErr := elastic.NewClient(elastic.SetBasicAuth(eslogin, espass))
+
 	if elasticClientErr != nil {
 		beego.Debug("Error deleting match: ", matchId, " - error:", elasticClientErr.Error())
 		return false
@@ -146,7 +172,7 @@ func Delete(matchId string) bool {
 		Index(ELASTIC_INDEX).
 		Type(ELASTIC_MATCH_TYPE).
 		Id(matchId).
-		Do()
+		Do(ctx)
 
 	if elasticSearchErr != nil {
 		beego.Debug("Error deleting match: ", matchId, " - error:", elasticSearchErr.Error())
